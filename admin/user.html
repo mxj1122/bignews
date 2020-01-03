@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/iconfont.css">
     <link rel="stylesheet" href="css/main.css">
     <script src="./libs/jquery-1.12.4.min.js"></script>
+    <script src="./js/http.js"></script>
 
 </head>
 
@@ -44,7 +45,7 @@
                     <label for="inputPassword3" class="col-sm-2 control-label">用户图标：</label>
                     <div class="col-sm-10">
                         <img src="images/2.jpg" alt="" class="user_pic">
-                        <input style="display: block" name="userPic" type="file" id="exampleInputFile">
+                        <input style="display: none" name="userPic" type="file" id="exampleInputFile">
                         <!-- 给label标签的for属性赋值,值是input标签的id,那这样的话点击label就相当于点击了input -->
                         <br>
                         <label for="exampleInputFile">
@@ -68,6 +69,67 @@
             </form>
         </div>
     </div>
+    <script>
+        /* 入口函数：保证在执行代码时页面DOM树加载完毕，防止获取元素失败 */
+        $(function () {
+            // 发送ajax请求获取用户信息并渲染到页面
+            $.ajax({
+                url: BigNew.user_detail,
+                type: 'get',
+                dataType: 'json',
+                success: function (backData) {
+                    // 将返回数据渲染到页面
+                    // $('.username').val(backData.data.username);
+                    // $('.nickname').val(backData.data.nickname);
+                    // $('.email').val(backData.data.email);
+                    // $('.password').val(backData.data.password);
+                    $('.user_pic').attr('src', backData.data.userPic);
+                    // 优化：因为上述表单类名和后台数据的data对象中的属性名一样，所以遍历data对象生成表单类名
+                    for (let key in backData.data) {
+                        $('.' + key).val(backData.data[key])
+                    };
+                }
+            });
+
+
+
+            // 文件预览功能
+            //1.给file表单元素注册onchange事件
+            $('#exampleInputFile').change(function () {
+                //1.2 获取用户选择的图片
+                var file = this.files[0];
+                //1.3 将文件转为src路径
+                var url = URL.createObjectURL(file);
+                //1.4 将url路径赋值给img标签的src
+                $('.user_pic').attr('src', url);
+            });
+
+
+
+            // 点击修改按钮时发送ajax请求修改用户信息
+            // ajax发送请求,带有文件的提交时有固定格式
+            $('.btn-edit').on('click', function (e) {
+                //禁用表单默认提交事件
+                e.preventDefault();
+                //创建FormData对象：参数是表单dom对象
+                var fd = new FormData($('#form')[0]);
+                $.ajax({
+                    url: BigNew.user_edit,
+                    type: 'post',
+                    dataType: 'json',
+                    data: fd,
+                    contentType: false,
+                    processData: false,
+                    success: function (backData) {
+                        console.log(backData);
+                        if (backData.code == 200) {
+                            alert('修改成功！');
+                        };
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
